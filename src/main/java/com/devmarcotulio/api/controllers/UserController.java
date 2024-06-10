@@ -1,6 +1,9 @@
 package com.devmarcotulio.api.controllers;
 
+import com.devmarcotulio.api.dtos.ResponseDto;
 import com.devmarcotulio.api.entities.User;
+import com.devmarcotulio.api.exceptions.UserNotFoundException;
+import com.devmarcotulio.api.records.UserRecord;
 import com.devmarcotulio.api.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,18 +25,23 @@ public class UserController {
     }
 
     @GetMapping(value = "/{id}")
-    public User findById(@PathVariable Long id) {
-        return userRepository.findById(id).get();
+    public ResponseEntity<User> findById(@PathVariable Long id) {
+
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found with this ID: " + id));
+
+        return ResponseEntity.ok(user);
     }
 
     @PostMapping
-    public ResponseEntity<?> insert(@RequestBody User user) {
-        User userExists = userRepository.findByEmail(user.getEmail());
+    public ResponseEntity<ResponseDto> insert(@RequestBody UserRecord user) {
+        User userExists = userRepository.findByEmail(user.email());
 
         if(userExists != null) {
-            return ResponseEntity.status(HttpStatus.CREATED).body("Email already exists!");
+            return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDto("409", "Email already exists!"));
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(userRepository.save(user));
+        User userObj = new User(user.name(), user.email(), user.department());
+        userRepository.save(userObj);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 }

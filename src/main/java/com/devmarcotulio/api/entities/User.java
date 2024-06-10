@@ -16,6 +16,12 @@ public class User {
     @JoinColumn(name = "department_id")
     private Department department;
 
+    public User(String name, String email, Department department) {
+        this.name = name;
+        this.email = email;
+        this.department = department;
+    }
+
     public User() {}
 
     public Long getId() {
